@@ -1,9 +1,10 @@
 using DiscProfilesApi.Interfaces;
+using DiscProfilesApi.Mappings;
 using DiscProfilesApi.Models;
 using DiscProfilesApi.Repositories;
 using DiscProfilesApi.Services;
-using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,10 +24,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+//Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Dependency Injection
-builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+// Generic Dependency Injection
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped(typeof(IGenericService<,>), typeof(GenericService<,>));
 
 var app = builder.Build();
 
