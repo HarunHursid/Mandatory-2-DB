@@ -1,4 +1,5 @@
-﻿using DiscProfilesApi.Interfaces;
+﻿using DiscProfilesApi.DTOs;
+using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,82 +7,70 @@ namespace DiscProfilesApi.Services
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly DiscProfilesContext _context;
+        private readonly IEmployeeRepository _repo;
 
-        public EmployeeService(DiscProfilesContext context)
+        public EmployeeService(IEmployeeRepository repo)
         {
-            _context = context;
+            _repo = repo;
         }
 
-        public async Task<IEnumerable<employee>> GetAllAsync()
+        public async Task<IEnumerable<EmployeeDTO>> GetAllAsync()
         {
-            var entities = await _context.employees.AsNoTracking().ToListAsync();
+            var entities = await _repo.GetAllAsync();
             return entities.Select(MapToDto);
         }
 
-        public async Task<employee?> GetByIdAsync(int id)
+        public async Task<EmployeeDTO?> GetByIdAsync(int id)
         {
-            var entity = await _context.employees.AsNoTracking().FirstOrDefaultAsync(e => e.id == id);
+            var entity = await _repo.GetByIdAsync(id);
             return entity == null ? null : MapToDto(entity);
         }
 
-        public async Task<employee> CreateAsync(employee employee)
+        public async Task<EmployeeDTO> CreateAsync(EmployeeDTO dto)
         {
-            var entity = MapToEntity(employee);
-            _context.employees.Add(entity);
-            await _context.SaveChangesAsync();
-            return MapToDto(entity);
+            var entity = new employee
+            {
+                email = dto.email,
+                phone = dto.phone,
+                company_id = dto.company_id,
+                person_id = dto.person_id,
+                department_id = dto.department_id,
+                position_id = dto.position_id,
+                disc_profile_id = dto.disc_profile_id
+            };
+            var created = await _repo.AddAsync(entity);
+            return MapToDto(created);
         }
 
-        public async Task<employee> UpdateAsync(employee employee)
+        public async Task<EmployeeDTO?> UpdateAsync(int id, EmployeeDTO dto)
         {
-            var entity = await _context.employees.FindAsync(employee.id);
-            if (entity == null)
-                throw new KeyNotFoundException("Employee not found");
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null) return null;
 
-            entity.email = employee.email;
-            entity.phone = employee.phone;
-            entity.company_id = employee.company_id;
-            entity.person_id = employee.person_id;
-            entity.position_id = employee.position_id;
-            entity.department_id = employee.department_id;
-            entity.disc_profile_id = employee.disc_profile_id;
-            await _context.SaveChangesAsync();
-            return MapToDto(entity);
+            existing.email = dto.email;
+            existing.phone = dto.phone;
+            existing.company_id = dto.company_id;
+            existing.person_id = dto.person_id;
+            existing.department_id = dto.department_id;
+            existing.position_id = dto.position_id;
+            existing.disc_profile_id = dto.disc_profile_id;
+
+            var updated = await _repo.UpdateAsync(existing);
+            return updated == null ? null : MapToDto(updated);
         }
 
+        public Task<bool> DeleteAsync(int id) => _repo.DeleteAsync(id);
 
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var entity = await _context.employees.FindAsync(id);
-            if (entity == null)
-                return false;
-            _context.employees.Remove(entity);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        private static employee MapToDto(employee e) => new()
+        private static EmployeeDTO MapToDto(employee e) => new()
         {
             id = e.id,
             email = e.email,
             phone = e.phone,
             company_id = e.company_id,
             person_id = e.person_id,
-            position_id = e.position_id,
             department_id = e.department_id,
+            position_id = e.position_id,
             disc_profile_id = e.disc_profile_id
-        };
-
-        private static employee MapToEntity(employee employee) => new()
-        {
-            id = employee.id,
-            email = employee.email,
-            phone = employee.phone,
-            company_id = employee.company_id,
-            person_id = employee.person_id,
-            position_id = employee.position_id,
-            department_id = employee.department_id,
-            disc_profile_id = employee.disc_profile_id
         };
     }
 }
