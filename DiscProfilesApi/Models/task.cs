@@ -18,6 +18,11 @@ public partial class task
 
     public int? project_id { get; set; }
 
+    public bool completed { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? time_of_completion { get; set; }
+
     [InverseProperty("task")]
     public virtual ICollection<daily_task_log> daily_task_logs { get; set; } = new List<daily_task_log>();
 

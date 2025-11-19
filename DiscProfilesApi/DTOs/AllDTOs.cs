@@ -108,6 +108,9 @@ namespace DiscProfilesApi.DTOs
         public int id { get; set; }
         public string name { get; set; } = null!;
         public int? project_id { get; set; }
+        
+        public bool completed { get; set; }
+        public DateTime? time_of_completion { get; set; }
     }
 
     public class TaskEvaluationDTO
