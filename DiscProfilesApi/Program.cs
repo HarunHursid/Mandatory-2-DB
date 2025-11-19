@@ -3,6 +3,7 @@ using DiscProfilesApi.Models;
 using DiscProfilesApi.Repositories;
 using DiscProfilesApi.Services;
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,11 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+Env.Load();
+
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
 builder.Services.AddDbContext<DiscProfilesContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DiscProfilesDb")
-    ));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
