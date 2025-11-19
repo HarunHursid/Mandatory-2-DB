@@ -1,4 +1,5 @@
 ﻿using DiscProfilesApi;
+using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Models;
 
 
@@ -7,10 +8,10 @@ namespace DiscProfilesApi.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<IEnumerable<employee>> GetAllAsync();
-        Task<employee?> GetByIdAsync(int id);
-        Task<employee> CreateAsync(employee employee);
-        Task<employee> UpdateAsync(employee employee);
+        Task<IEnumerable<EmployeeDTO>> GetAllAsync();
+        Task<EmployeeDTO?> GetByIdAsync(int id);
+        Task<EmployeeDTO> CreateAsync(EmployeeDTO dto);
+        Task<EmployeeDTO?> UpdateAsync(int id, EmployeeDTO dto);
         Task<bool> DeleteAsync(int id);
     }
 }
