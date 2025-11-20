@@ -22,7 +22,7 @@ namespace DiscProfilesApi.Mappings
             CreateMap<stress_measure, StressMeasureDTO>().ReverseMap();
             CreateMap<task, TaskDTO>().ReverseMap();
             CreateMap<task_evaluation, TaskEvaluationDTO>().ReverseMap();
-            CreateMap<vw_SocialEventsOverview, VwSocialEventsOverviewDTO>().ReverseMap();  
+            CreateMap<vw_SocialEventsOverview, VwSocialEventsOverviewDTO>().ReverseMap(); 
 
         }
     }
