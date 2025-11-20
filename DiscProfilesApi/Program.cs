@@ -30,6 +30,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Generic Dependency Injection
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<,>), typeof(GenericService<,>));
+builder.Services.AddScoped<IEmployee_PersonDomainInterface, Employee_PersonDomainService>();
 
 var app = builder.Build();
 

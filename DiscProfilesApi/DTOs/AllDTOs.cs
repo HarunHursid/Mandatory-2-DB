@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace DiscProfilesApi.DTOs
 {
     public class CompanyDTO
@@ -129,5 +131,56 @@ namespace DiscProfilesApi.DTOs
         public string? disc_profile_name { get; set; }
         public string? disc_color { get; set; }
         public string? disc_description { get; set; }
+    }
+
+    public class CreateEmployee_PersonRequestDto
+    {
+        [EmailAddress(ErrorMessage = "Private email is not a valid email address.")]
+        [MaxLength(255)]
+        public string? PrivateEmail { get; set; }
+
+        [Phone(ErrorMessage = "Private phone is not a valid phone number.")]
+        [MaxLength(255)]
+        public string? PrivatePhone { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        // evt. ekstra CPR-validering med Regex:
+        // [RegularExpression(@"^\d{6}-?\d{4}$", ErrorMessage = "CPR must be in format DDMMYY-XXXX")]
+        public string Cpr { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string LastName { get; set; } = string.Empty;
+
+        // Erfaring i år – optional
+        [Range(0, 80, ErrorMessage = "Experience must be between 0 and 80 years.")]
+        public int? Experience { get; set; }
+
+        // Kobling til eksisterende education (valgfri)
+        public int? EducationId { get; set; }
+
+        // ---------- EMPLOYEE ----------
+
+        [Required]
+        [EmailAddress(ErrorMessage = "Work email is not a valid email address.")]
+        [MaxLength(255)]
+        public string WorkEmail { get; set; } = string.Empty;
+
+        [Required]
+        [Phone(ErrorMessage = "Work phone is not a valid phone number.")]
+        [MaxLength(255)]
+        public string WorkPhone { get; set; } = string.Empty;
+
+        [Required]
+        public int CompanyId { get; set; }
+
+        public int? DepartmentId { get; set; }
+        public int? PositionId { get; set; }
+        public int? DiscProfileId { get; set; }
     }
 }
