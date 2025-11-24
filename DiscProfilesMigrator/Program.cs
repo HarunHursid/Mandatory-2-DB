@@ -248,6 +248,7 @@ internal class Program
 
         var docs = rows.ConvertAll(e => new EmployeeDocument
         {
+
             Id = e.id,
             Email = e.email,
             Phone = e.phone,
@@ -255,7 +256,10 @@ internal class Program
             PersonId = e.person_id,
             DepartmentId = e.department_id,
             PositionId = e.position_id,
-            DiscProfileId = e.disc_profile_id
+            DiscProfileId = e.disc_profile_id,
+            CreatedAt = e.CreatedAt,
+            IsActive = e.IsActive,
+            LastLogin = e.LastLogin
         });
 
         var col = mongo.GetCollection<EmployeeDocument>("employees");
@@ -523,35 +527,39 @@ public class EducationDocument
 
 public class EmployeeDocument
 {
-    [BsonId]
-    public int Id { get; set; }
+        [BsonId]
+        public int Id { get; set; }
 
-    [BsonElement("name")]
-    public string Name { get; set; } = string.Empty;
+        [BsonElement("email")]
+        public string? Email { get; set; }
 
-    [BsonElement("email")]
-    public string? Email { get; set; }
+        [BsonElement("phone")]
+        public string? Phone { get; set; }
 
-    [BsonElement("phone")]
-    public string? Phone { get; set; }
+        [BsonElement("company_id")]
+        public int CompanyId { get; set; }
 
-    [BsonElement("company_id")]
-    public int CompanyId { get; set; }
+        [BsonElement("person_id")]
+        public int? PersonId { get; set; }
 
-    [BsonElement("person_id")]
-    public int? PersonId { get; set; }
+        [BsonElement("department_id")]
+        public int? DepartmentId { get; set; }
 
-    [BsonElement("department_id")]
-    public int? DepartmentId { get; set; }
+        [BsonElement("position_id")]
+        public int? PositionId { get; set; }
 
-    [BsonElement("education_id")]
-    public int? EducationId { get; set; }
+        [BsonElement("disc_profile_id")]
+        public int? DiscProfileId { get; set; }
 
-    [BsonElement("position_id")]
-    public int? PositionId { get; set; }
+        [BsonElement("created_at")]
+        public DateTime? CreatedAt { get; set; }
 
-    [BsonElement("disc_profile_id")]
-    public int? DiscProfileId { get; set; }
+        [BsonElement("is_active")]
+        public bool? IsActive { get; set; }
+
+        [BsonElement("last_login")]
+        public DateTime? LastLogin { get; set; }
+    
 }
 
 public class ProjectDocument
