@@ -43,5 +43,11 @@ namespace DiscProfilesApi.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public virtual async Task<T?> GetByEmailAsync(string email)
+        {
+            return await _dbSet.FirstOrDefaultAsync(e => 
+                EF.Property<string>(e, "Email") == email);
+        }
     }
 }

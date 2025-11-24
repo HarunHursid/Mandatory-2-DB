@@ -15,6 +15,8 @@ public partial class DiscProfilesContext : DbContext
     {
     }
 
+    public virtual DbSet<AppUser> AppUsers { get; set; }
+
     public virtual DbSet<company> companies { get; set; }
 
     public virtual DbSet<daily_task_log> daily_task_logs { get; set; }
@@ -47,6 +49,29 @@ public partial class DiscProfilesContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AppUser>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__app_users__id");
+
+            entity.ToTable("app_users");
+
+            entity.HasIndex(e => e.Email).HasName("UQ_app_users_email").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Email).HasColumnName("email").HasMaxLength(255).IsUnicode(false);
+            entity.Property(e => e.PasswordHash).HasColumnName("password_hash").HasMaxLength(500).IsUnicode(false);
+            entity.Property(e => e.Role).HasColumnName("role").HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime");
+            entity.Property(e => e.LastLogin).HasColumnName("last_login").HasColumnType("datetime");
+            entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+
+            entity.HasOne(d => d.Employee)
+                .WithMany(p => p.AppUsers)
+                .HasForeignKey(d => d.EmployeeId)
+                .HasConstraintName("FK_app_users_employees");
+        });
+
         modelBuilder.Entity<company>(entity =>
         {
             entity.HasKey(e => e.id).HasName("PK__companie__3213E83F18181406");
@@ -93,6 +118,10 @@ public partial class DiscProfilesContext : DbContext
             entity.HasOne(d => d.person).WithMany(p => p.employees).HasConstraintName("FK__employees__perso__49C3F6B7");
 
             entity.HasOne(d => d.position).WithMany(p => p.employees).HasConstraintName("FK_employees_positions");
+
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
+            entity.Property(e => e.LastLogin).HasColumnName("last_login").HasColumnType("datetime");
         });
 
         modelBuilder.Entity<person>(entity =>

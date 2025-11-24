@@ -7,5 +7,6 @@ namespace DiscProfilesApi.Interfaces
         Task<T> AddAsync(T entity);
         Task<T?> UpdateAsync(T entity);
         Task<bool> DeleteAsync(int id);
+        Task<T?> GetByEmailAsync(string email);     
     }
 }

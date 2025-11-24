@@ -1,5 +1,54 @@
 namespace DiscProfilesApi.DTOs
 {
+
+    public class LoginRequest
+    {
+        public string email { get; set; } = null!;
+        public string password { get; set; } = null!;
+    }
+
+    public class LoginResponse
+    {
+        public int id { get; set; }
+        public string email { get; set; } = null!;
+        public string role { get; set; } = null!;
+        public string token { get; set; } = null!;
+    }
+
+    public class AppUserDTO
+    {
+        public int id { get; set; }
+        public string email { get; set; } = null!;
+        public string role { get; set; } = null!;
+        public bool is_active { get; set; }
+        public int? employee_id { get; set; }
+        public DateTime created_at { get; set; }
+        public DateTime? last_login { get; set; }
+    }
+
+    public class CreateAppUserDTO
+    {
+        // LOGIN / APPUSER
+        public string email { get; set; } = null!;
+        public string password { get; set; } = null!;
+        public string role { get; set; } = "user";
+
+        // PERSON (privat)
+        public string? first_name { get; set; }
+        public string? last_name { get; set; }
+        public string? private_email { get; set; }
+        public string? private_phone { get; set; }
+        public string? cpr { get; set; }
+        public int? experience { get; set; }
+        public int? education_id { get; set; }   // mappes til person.EducationID
+
+        // EMPLOYEE (arbejde)
+        public string? employee_phone { get; set; }
+        public int company_id { get; set; }      // SKAL udfyldes
+        public int? department_id { get; set; }
+        public int? position_id { get; set; }
+    }
+
     public class CompanyDTO
     {
         public int id { get; set; }
@@ -48,6 +97,7 @@ namespace DiscProfilesApi.DTOs
         public int? department_id { get; set; }
         public int? position_id { get; set; }
         public int? disc_profile_id { get; set; }
+
     }
 
     public class PersonDTO

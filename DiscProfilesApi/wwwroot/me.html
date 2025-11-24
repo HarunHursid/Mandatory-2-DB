@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Min profil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        .field {
+            margin-bottom: 8px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 8px 12px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Min profil</h1>
+    <div id="info"></div>
+    <div class="error" id="error"></div>
+    <button id="logoutBtn">Log ud</button>
+
+    <script>
+        const apiBaseUrl = window.location.origin;
+        const token = localStorage.getItem('token');
+
+        // Hvis ingen token → tilbage til login
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        async function loadMe() {
+            const infoDiv = document.getElementById('info');
+            const errorDiv = document.getElementById('error');
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        errorDiv.textContent = "Token er udløbet. Log ind igen.";
+                        setTimeout(() => window.location.href = 'login.html', 1500);
+                        return;
+                    }
+                    errorDiv.textContent = "Kunne ikke hente brugerinfo.";
+                    return;
+                }
+
+                const user = await response.json();
+
+                infoDiv.innerHTML = `
+                    <div class="field"><strong>Email:</strong> ${user.email}</div>
+                    <div class="field"><strong>Rolle:</strong> ${user.role}</div>
+                    <div class="field"><strong>Employee ID:</strong> ${user.employee_id ?? 'ikke sat'}</div>
+                    <div class="field"><strong>Oprettet:</strong> ${user.created_at}</div>
+                    <div class="field"><strong>Sidst logget ind:</strong> ${user.last_login ?? 'aldrig'}</div>
+                `;
+            } catch (err) {
+                errorDiv.textContent = "Der opstod en fejl.";
+                console.error(err);
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            localStorage.removeItem('role');
+            window.location.href = 'login.html';
+        });
+
+        loadMe();
+    </script>
+</body>
+</html>
