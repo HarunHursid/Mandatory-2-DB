@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <label>
+            Email
+            <input type="email" id="email" required />
+        </label>
+        <label>
+            Password
+            <input type="password" id="password" required />
+        </label>
+        <button type="submit">Log ind</button>
+    </form>
+    <div class="error" id="error"></div>
+
+    <script>
+        const apiBaseUrl = window.location.origin; // fx https://localhost:7064
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = "";
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/Auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    errorDiv.textContent = "Forkert email eller password.";
+                    return;
+                }
+
+                const data = await response.json();
+
+                // Gem token + info
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('email', data.email);
+                localStorage.setItem('role', data.role);
+
+                // Admin → admin.html, ellers me.html
+                if (data.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'me.html';
+                }
+            } catch (err) {
+                errorDiv.textContent = "Der opstod en fejl. Prøv igen.";
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>

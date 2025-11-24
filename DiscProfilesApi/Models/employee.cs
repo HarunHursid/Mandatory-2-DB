@@ -32,6 +32,14 @@ public partial class employee
 
     public int? disc_profile_id { get; set; }
 
+    [Column(TypeName = "datetime")]
+    public DateTime CreatedAt { get; set; }
+
+    public bool IsActive { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime LastLogin { get; set; }
+
     [ForeignKey("company_id")]
     [InverseProperty("employees")]
     public virtual company company { get; set; } = null!;
@@ -66,4 +74,7 @@ public partial class employee
     [ForeignKey("employee_id")]
     [InverseProperty("employees")]
     public virtual ICollection<task> tasks { get; set; } = new List<task>();
+
+    [InverseProperty("Employee")]
+    public virtual ICollection<AppUser> AppUsers { get; set; } = new List<AppUser>();
 }

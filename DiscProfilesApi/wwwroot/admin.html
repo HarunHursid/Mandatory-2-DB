@@ -1,0 +1,337 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin – brugere</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f5f5f5;
+            text-align: left;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+
+        form {
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-top: 20px;
+        }
+
+            form h2 {
+                margin-top: 0;
+            }
+
+        label {
+            display: block;
+            margin-top: 8px;
+        }
+
+        input, select {
+            padding: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 3px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Admin – brugere</h1>
+        <button id="logoutBtn">Log ud</button>
+    </div>
+
+    <div class="error" id="error"></div>
+    <div class="success" id="success"></div>
+
+    <!-- Tabel med eksisterende brugere -->
+    <table id="usersTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Email</th>
+                <th>Rolle</th>
+                <th>Aktiv</th>
+                <th>Employee ID</th>
+            </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+    </table>
+
+    <!-- Form til at oprette ny bruger -->
+    <form id="createUserForm">
+        <h2>Opret ny bruger (AppUser + Employee + Person)</h2>
+
+        <h3>Login / AppUser</h3>
+        <label>
+            Email (arbejds-mail / login)
+            <input type="email" id="newEmail" required />
+        </label>
+
+        <label>
+            Password (midlertidigt)
+            <input type="password" id="newPassword" required />
+        </label>
+
+        <label>
+            Rolle
+            <select id="newRole">
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+            </select>
+        </label>
+
+        <h3>Person-oplysninger</h3>
+        <label>
+            Fornavn
+            <input type="text" id="personFirstName" />
+        </label>
+
+        <label>
+            Efternavn
+            <input type="text" id="personLastName" />
+        </label>
+
+        <label>
+            Privat email
+            <input type="email" id="personPrivateEmail" />
+        </label>
+
+        <label>
+            Privat telefon
+            <input type="text" id="personPrivatePhone" />
+        </label>
+
+        <label>
+            CPR
+            <input type="text" id="personCpr" />
+        </label>
+
+        <label>
+            Erfaring (år)
+            <input type="number" id="personExperience" min="0" />
+        </label>
+
+        <label>
+            Education ID
+            <input type="number" id="personEducationId" min="1" />
+        </label>
+
+        <h3>Employee-oplysninger</h3>
+        <label>
+            Company ID
+            <input type="number" id="employeeCompanyId" min="1" required />
+        </label>
+
+        <label>
+            Employee telefon
+            <input type="text" id="employeePhone" />
+        </label>
+
+        <label>
+            Department ID
+            <input type="number" id="employeeDepartmentId" min="1" />
+        </label>
+
+        <label>
+            Position ID
+            <input type="number" id="employeePositionId" min="1" />
+        </label>
+
+        <button type="submit">Opret bruger</button>
+    </form>
+
+    <script>
+        const apiBaseUrl = window.location.origin;
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+        const usersTable = document.getElementById('usersTable');
+        const usersBody = document.getElementById('usersBody');
+
+        // LOGOUT
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('email');
+            localStorage.removeItem('role');
+            window.location.href = 'login.html';
+        });
+
+        // Hvis ikke logget ind → login
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // Hvis ikke admin → væk herfra
+        if (role !== 'admin') {
+            errorDiv.textContent = "Du skal være admin for at se denne side.";
+        } else {
+            loadUsers();
+        }
+
+        // Hent eksisterende brugere
+        async function loadUsers() {
+            errorDiv.textContent = "";
+            successDiv.textContent = "";
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/AppUser`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    errorDiv.textContent = "Kunne ikke hente brugere. Status: " + response.status;
+                    return;
+                }
+
+                const users = await response.json();
+                usersTable.style.display = "";
+                usersBody.innerHTML = "";
+
+                users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.email}</td>
+                            <td>${user.role}</td>
+                            <td>${user.is_active ? 'Ja' : 'Nej'}</td>
+                            <td>${user.employee_id ?? ''}</td>
+                        `;
+                    usersBody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = "Der opstod en fejl ved hentning af brugere.";
+            }
+        }
+
+        // Håndtér oprettelse af ny bruger (AppUser + Employee + Person)
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.textContent = "";
+            successDiv.textContent = "";
+
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+            const roleValue = document.getElementById('newRole').value;
+
+            const firstName = document.getElementById('personFirstName').value;
+            const lastName = document.getElementById('personLastName').value;
+            const privateEmail = document.getElementById('personPrivateEmail').value;
+            const privatePhone = document.getElementById('personPrivatePhone').value;
+            const cpr = document.getElementById('personCpr').value;
+            const experienceRaw = document.getElementById('personExperience').value;
+            const educationRaw = document.getElementById('personEducationId').value;
+
+            const companyIdRaw = document.getElementById('employeeCompanyId').value;
+            const employeePhone = document.getElementById('employeePhone').value;
+            const departmentRaw = document.getElementById('employeeDepartmentId').value;
+            const positionRaw = document.getElementById('employeePositionId').value;
+
+            if (!email || !password || !companyIdRaw) {
+                errorDiv.textContent = "Email, password og company ID skal udfyldes.";
+                return;
+            }
+
+            const body = {
+                email: email,
+                password: password,
+                role: roleValue,
+                first_name: firstName,
+                last_name: lastName,
+                private_email: privateEmail,
+                private_phone: privatePhone,
+                cpr: cpr,
+                experience: experienceRaw ? parseInt(experienceRaw, 10) : null,
+                education_id: educationRaw ? parseInt(educationRaw, 10) : null,
+                employee_phone: employeePhone,
+                company_id: parseInt(companyIdRaw, 10),
+                department_id: departmentRaw ? parseInt(departmentRaw, 10) : null,
+                position_id: positionRaw ? parseInt(positionRaw, 10) : null
+            };
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/AppUser`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 409) {
+                        errorDiv.textContent = "Der findes allerede en bruger med den email.";
+                        return;
+                    }
+                    if (response.status === 401) {
+                        errorDiv.textContent = "Token er udløbet. Log ind igen.";
+                        setTimeout(() => window.location.href = 'login.html', 1500);
+                        return;
+                    }
+                    if (response.status === 403) {
+                        errorDiv.textContent = "Du har ikke adgang til at oprette brugere.";
+                        return;
+                    }
+
+                    errorDiv.textContent = "Kunne ikke oprette bruger. Status: " + response.status;
+                    return;
+                }
+
+                successDiv.textContent = "Bruger + employee + person oprettet.";
+                document.getElementById('createUserForm').reset();
+                await loadUsers();
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = "Der opstod en fejl ved oprettelse af bruger.";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -7,5 +7,6 @@ namespace DiscProfilesApi.Interfaces
         Task<TDto> CreateAsync(TDto dto);
         Task<TDto?> UpdateAsync(int id, TDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<TEntity?> GetEntityByEmailAsync(string email);
     }
 }
