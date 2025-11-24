@@ -33,12 +33,12 @@ public partial class employee
     public int? disc_profile_id { get; set; }
 
     [Column(TypeName = "datetime")]
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 
     [Column(TypeName = "datetime")]
-    public DateTime LastLogin { get; set; }
+    public DateTime? LastLogin { get; set; }
 
     [ForeignKey("company_id")]
     [InverseProperty("employees")]
