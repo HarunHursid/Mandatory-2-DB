@@ -71,7 +71,7 @@ internal class Program
         await MigrateTaskEvaluationsAsync(sqlContext, mongoDb);
         await MigrateStressMeasuresAsync(sqlContext, mongoDb);
         await MigrateProjectsDiscProfilesAsync(sqlContext, mongoDb);
-
+        await MigrateAppUsersAsync(sqlContext, mongoDb);
         Console.WriteLine("✅ Migration completed.");
     }
 
@@ -410,6 +410,33 @@ internal class Program
 
         Console.WriteLine($"  → {docs.Count} projects_disc_profiles migrated.");
     }
+
+    // ------------- APP USERS ------------- 
+
+    private static async Task MigrateAppUsersAsync(DiscProfilesContext sql, IMongoDatabase mongo)
+    {
+        Console.WriteLine("Migrating app_users...");
+
+        var rows = await sql.AppUsers.ToListAsync();
+        var docs = rows.ConvertAll(u => new AppUserDocument
+        {
+            Id = u.Id,
+            Email = u.Email,
+            PasswordHash = u.PasswordHash,
+            Role = u.Role,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            LastLogin = u.LastLogin,
+            EmployeeId = u.EmployeeId
+        });
+
+        var col = mongo.GetCollection<AppUserDocument>("app_users");
+        await col.DeleteManyAsync(_ => true);  // ryd collection før insert
+        if (docs.Count > 0)
+            await col.InsertManyAsync(docs);
+
+        Console.WriteLine($"  → {docs.Count} app_users migrated.");
+    }
 }
 
 // ----------------- DOCUMENT-CLASSES TIL MONGO -----------------
@@ -658,4 +685,31 @@ public class ProjectsDiscProfilesDocument
 
     [BsonElement("disc_profile_id")]
     public int DiscProfileId { get; set; }
+}
+
+public class AppUserDocument
+{
+    [BsonId]
+    public int Id { get; set; }
+
+    [BsonElement("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [BsonElement("password_hash")]
+    public string PasswordHash { get; set; } = string.Empty;
+
+    [BsonElement("role")]
+    public string Role { get; set; } = "user";
+
+    [BsonElement("is_active")]
+    public bool IsActive { get; set; }
+
+    [BsonElement("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [BsonElement("last_login")]
+    public DateTime? LastLogin { get; set; }
+
+    [BsonElement("employee_id")]
+    public int? EmployeeId { get; set; }
 }
