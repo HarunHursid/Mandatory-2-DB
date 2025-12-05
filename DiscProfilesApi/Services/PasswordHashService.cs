@@ -8,7 +8,9 @@ namespace DiscProfilesApi.Services;
 
 public interface IPasswordHashService
 {
+    //Hash password on registration
     string HashPassword(string password);
+    //Verify password on login
     bool VerifyPassword(string password, string hash);
 }
 
