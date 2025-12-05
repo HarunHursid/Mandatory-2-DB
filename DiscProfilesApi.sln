@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscProfilesApi", "DiscProf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscProfilesMigrator", "DiscProfilesMigrator\DiscProfilesMigrator.csproj", "{D4E944F1-887F-426B-8FC0-C03D05234BAD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphMigrator", "GraphMigrator\GraphMigrator.csproj", "{402F8E5F-7D8C-4725-B5AE-71ECE7D4BD57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D4E944F1-887F-426B-8FC0-C03D05234BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4E944F1-887F-426B-8FC0-C03D05234BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4E944F1-887F-426B-8FC0-C03D05234BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{402F8E5F-7D8C-4725-B5AE-71ECE7D4BD57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{402F8E5F-7D8C-4725-B5AE-71ECE7D4BD57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{402F8E5F-7D8C-4725-B5AE-71ECE7D4BD57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{402F8E5F-7D8C-4725-B5AE-71ECE7D4BD57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
