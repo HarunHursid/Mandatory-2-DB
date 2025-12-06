@@ -1,14 +1,17 @@
+using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Mappings;
 using DiscProfilesApi.Models;
+using DiscProfilesApi.MongoDocuments;
 using DiscProfilesApi.Repositories;
 using DiscProfilesApi.Services;
 using DotNetEnv;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
+using System.Text;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +22,24 @@ var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
+var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
+
+builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
+builder.Services.AddSingleton(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(mongoDatabaseName);
+});
+
+// Generic repo for alle dokumenttyper
+builder.Services.AddScoped(typeof(IGenericMongoRepository<>), typeof(GenericMongoRepository<>));
+
+// Kun service-registrering – mapperen kommer fra AutoMapper
+builder.Services.AddScoped<
+    IGenericMongoService<CompanyDocument, CompanyDTO>,
+    GenericMongoService<CompanyDocument, CompanyDTO>>();
 
 builder.Services.AddDbContext<DiscProfilesContext>(options =>
     options.UseSqlServer(connectionString));

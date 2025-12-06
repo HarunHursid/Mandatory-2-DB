@@ -12,14 +12,28 @@ namespace DiscProfilesApi.Repositories
 
         public GenericMongoRepository(IMongoDatabase database)
         {
-            // Simpel convention: CompanyDocument -> "companies", EmployeeDocument -> "employees" osv.
-            var collectionName = typeof(TDocument).Name
-                .Replace("Document", "")
-                .ToLower() + "s";
-
+            var collectionName = GetCollectionName(typeof(TDocument).Name);
             _collection = database.GetCollection<TDocument>(collectionName);
         }
 
+        private static string GetCollectionName(string documentName)
+        {
+            // Fjern "Document" suffix og konverter til lowercase
+            var baseName = documentName.Replace("Document", "").ToLower();
+
+            // Håndter special cases
+            return baseName switch
+            {
+                "company" => "companies",
+                "discprofile" => "disc_profiles",
+                "projectsdiscprofile" => "projects_disc_profiles",
+                "dailytasklog" => "daily_task_logs",
+                "socialevent" => "social_events",
+                "stressmeasure" => "stress_measures",
+                "taskevaluation" => "task_evaluations",
+                _ => baseName.EndsWith("s") ? baseName : baseName + "s" // Tilføj kun 's' hvis den ikke allerede slutter på 's'
+            };
+        }
         public async Task<List<TDocument>> GetAllAsync() =>
             await _collection.Find(Builders<TDocument>.Filter.Empty).ToListAsync();
 
