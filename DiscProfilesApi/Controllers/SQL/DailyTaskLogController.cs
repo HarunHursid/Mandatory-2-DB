@@ -2,7 +2,7 @@ using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Models;
 
-namespace DiscProfilesApi.Controllers
+namespace DiscProfilesApi.Controllers.SQL
 {
     public class DailyTaskLogController : GenericController<daily_task_log, DailyTaskLogDTO>
     {
