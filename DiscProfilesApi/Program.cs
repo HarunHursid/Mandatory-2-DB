@@ -1,14 +1,18 @@
+using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Mappings;
 using DiscProfilesApi.Models;
+using DiscProfilesApi.MongoDocuments;
 using DiscProfilesApi.Repositories;
 using DiscProfilesApi.Services;
 using DotNetEnv;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
+using System.Text;
+
 using Neo4j.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,12 +23,30 @@ Env.Load();
 // SQL connection fra .env
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
+var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
+var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
+
+builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
+builder.Services.AddSingleton(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(mongoDatabaseName);
+});
+
+// Generic repo for alle dokumenttyper
+builder.Services.AddScoped(typeof(IGenericMongoRepository<>), typeof(GenericMongoRepository<>));
+
+// Kun service-registrering  mapperen kommer fra AutoMapper
+builder.Services.AddScoped<
+    IGenericMongoService<CompanyDocument, CompanyDTO>,
+    GenericMongoService<CompanyDocument, CompanyDTO>>();
+
 // NEO4J connection fra .env
 var neo4jUri = Environment.GetEnvironmentVariable("NEO4J_URI");
 var neo4jUser = Environment.GetEnvironmentVariable("NEO4J_USER");
 var neo4jPassword = Environment.GetEnvironmentVariable("NEO4J_PASSWORD");
 // database-navn bruger du i din GraphEmployeeService
-// NEO4J_DATABASE l�ses derinde via Environment.GetEnvironmentVariable("NEO4J_DATABASE")
+// NEO4J_DATABASE læses derinde via Environment.GetEnvironmentVariable("NEO4J_DATABASE")
 
 // -------- SERVICES --------
 

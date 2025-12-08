@@ -1,6 +1,7 @@
 using AutoMapper;
 using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Models;
+using DiscProfilesApi.MongoDocuments;
 
 namespace DiscProfilesApi.Mappings
 {
@@ -39,6 +40,17 @@ namespace DiscProfilesApi.Mappings
                 .ForMember(dest => dest.EmployeeId, opt => opt.MapFrom(src => src.employee_id))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.created_at))
                 .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => src.last_login));
+
+            CreateMap<CompanyDocument, CompanyDTO>()
+                .ForMember(dest => dest.id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.location, opt => opt.MapFrom(src => src.Location))
+                .ForMember(dest => dest.business_field, opt => opt.MapFrom(src => src.BusinessField))
+                .ReverseMap()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.name))
+                .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.location))
+                .ForMember(dest => dest.BusinessField, opt => opt.MapFrom(src => src.business_field));
         }
     }
 }
