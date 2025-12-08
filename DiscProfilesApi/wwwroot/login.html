@@ -76,7 +76,7 @@
                 // Gem token + info
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('email', data.email);
-                localStorage.setItem('role', data.role);
+                localStorage.setItem('role', data.role.toLowerCase());
 
                 // Admin → admin.html, ellers me.html
                 if (data.role === 'admin') {

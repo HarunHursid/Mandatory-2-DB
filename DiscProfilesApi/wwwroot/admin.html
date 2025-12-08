@@ -206,6 +206,7 @@
             window.location.href = 'login.html';
         }
 
+
         // Hvis ikke admin → væk herfra
         if (role !== 'admin') {
             errorDiv.textContent = "Du skal være admin for at se denne side.";
@@ -239,12 +240,12 @@
 
                     // selve cellerne
                     tr.innerHTML = `
-                <td>${user.id}</td>
-                <td>${user.email}</td>
-                <td>${user.role}</td>
-                <td>${user.is_active ? 'Ja' : 'Nej'}</td>
-                <td>${user.employee_id ?? ''}</td>
-            `;
+                    <td>${user.id}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.is_active ? 'Ja' : 'Nej'}</td>
+                    <td>${user.employee_id ?? ''}</td>
+                `;
 
                     // gør rækken klikbar hvis der er employee_id
                     if (user.employee_id) {
