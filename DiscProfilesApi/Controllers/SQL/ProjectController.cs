@@ -2,7 +2,7 @@ using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Models;
 
-namespace DiscProfilesApi.Controllers
+namespace DiscProfilesApi.Controllers.SQL
 {
     public class ProjectController : GenericController<project, ProjectDTO>
     {

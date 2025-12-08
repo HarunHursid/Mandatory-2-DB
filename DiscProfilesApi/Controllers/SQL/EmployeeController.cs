@@ -4,7 +4,7 @@ using DiscProfilesApi.Models;
 using DiscProfilesApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DiscProfilesApi.Controllers
+namespace DiscProfilesApi.Controllers.SQL
 {
     [Route("api/[controller]")]
     [ApiController]

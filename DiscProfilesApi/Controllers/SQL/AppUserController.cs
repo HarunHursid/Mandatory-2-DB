@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiscProfilesApi.Controllers;
+namespace DiscProfilesApi.Controllers.SQL;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -16,15 +16,18 @@ public class AppUserController : ControllerBase
     private readonly IGenericService<AppUser, AppUserDTO> _service;
     private readonly DiscProfilesContext _context;
     private readonly IPasswordHashService _passwordHashService;
+    private readonly GraphEmployeeService _graphEmployeeService;
 
     public AppUserController(
         IGenericService<AppUser, AppUserDTO> service,
         DiscProfilesContext context,
-        IPasswordHashService passwordHashService)
+        IPasswordHashService passwordHashService,
+        GraphEmployeeService graphEmployeeService)
     {
         _service = service;
         _context = context;
         _passwordHashService = passwordHashService;
+        _graphEmployeeService = graphEmployeeService;
     }
 
     [HttpGet]
@@ -116,6 +119,17 @@ public class AppUserController : ControllerBase
 
             await transaction.CommitAsync();
 
+            // 4) Spejl employee til Neo4j (graph)
+            try
+            {
+                await _graphEmployeeService.MirrorEmployeeFromSqlAsync(employee.id);
+            }
+            catch
+            {
+                // Hvis graph-fejl, lader vi SQL stå som den er.
+                // Evt. TODO: log fejlen.
+            }
+
             var resultDto = new AppUserDTO
             {
                 id = user.Id,
@@ -127,7 +141,7 @@ public class AppUserController : ControllerBase
                 last_login = user.LastLogin
             };
 
-            return CreatedAtAction(nameof(GetById), new { id = resultDto.id }, resultDto);
+            return CreatedAtAction(nameof(GetById), new { resultDto.id }, resultDto);
         }
         catch (Exception ex)
         {
@@ -141,5 +155,20 @@ public class AppUserController : ControllerBase
                 error = innerMessage
             });
         }
+    }
+
+    // DELETE: api/AppUser/{id}
+    // Soft delete: vi sætter IsActive = false i stedet for at slette rækken
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var user = await _context.AppUsers.FindAsync(id);
+        if (user == null)
+            return NotFound();
+
+        user.IsActive = false;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
