@@ -1,0 +1,319 @@
+﻿<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8" />
+    <title>Employee – detaljer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        .success {
+            color: green;
+            margin-bottom: 10px;
+        }
+
+        form {
+            margin-bottom: 25px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        label {
+            display: block;
+            margin-top: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 2px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Employee – detaljer</h1>
+        <div>
+            <button onclick="window.location.href='admin.html'">Tilbage til users</button>
+            <button id="logoutBtn">Log ud</button>
+        </div>
+    </div>
+
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+
+    <h2 id="employeeHeader">Employee</h2>
+
+    <!-- 1) Opdater employee-oplysninger (SQL /api/Employee/{id}) -->
+    <form id="employeeForm">
+        <h3>Employee-oplysninger</h3>
+        <label>
+            Email
+            <input type="email" id="empEmail" />
+        </label>
+        <label>
+            Telefon
+            <input type="text" id="empPhone" />
+        </label>
+        <label>
+            Company ID
+            <input type="number" id="empCompanyId" min="1" required />
+        </label>
+        <label>
+            Department ID
+            <input type="number" id="empDepartmentId" min="0" />
+        </label>
+        <label>
+            Position ID
+            <input type="number" id="empPositionId" min="0" />
+        </label>
+        <button type="submit">Gem employee</button>
+    </form>
+
+    <!-- 2) Tilføj employee til projekt + task -->
+    <form id="assignForm">
+        <h3>Tilknyt til projekt / task</h3>
+        <label>
+            Projekt
+            <select id="projectSelect"></select>
+        </label>
+        <label>
+            Task (valgfri, filtreres på valgt projekt)
+            <select id="taskSelect">
+                <option value="">(ingen)</option>
+            </select>
+        </label>
+        <button type="submit">Tilknyt</button>
+    </form>
+
+    <script>
+        const apiBaseUrl = window.location.origin;
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        logoutBtn.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+        if (role !== 'admin') {
+            errorDiv.textContent = "Du skal være admin for at se denne side.";
+        }
+
+        // læs employeeId fra URL ?employeeId=12
+        const params = new URLSearchParams(window.location.search);
+        const employeeId = params.get('employeeId');
+
+        if (!employeeId) {
+            errorDiv.textContent = "Mangler employeeId i URL.";
+        } else {
+            document.getElementById('employeeHeader').textContent = `Employee #${employeeId}`;
+        }
+
+        const empEmail = document.getElementById('empEmail');
+        const empPhone = document.getElementById('empPhone');
+        const empCompanyId = document.getElementById('empCompanyId');
+        const empDepartmentId = document.getElementById('empDepartmentId');
+        const empPositionId = document.getElementById('empPositionId');
+
+        const projectSelect = document.getElementById('projectSelect');
+        const taskSelect = document.getElementById('taskSelect');
+
+        // VI GEMMER DE OPRINDELIGE VÆRDIER, SÅ VI IKKE NULSTILLER DEM
+        let currentPersonId = null;
+        let currentDiscProfileId = null;
+
+        async function loadEmployee() {
+            errorDiv.textContent = "";
+            if (!employeeId) return;
+
+            const res = await fetch(`${apiBaseUrl}/api/Employee/${employeeId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                errorDiv.textContent = "Kunne ikke hente employee. Status: " + res.status;
+                return;
+            }
+
+            const emp = await res.json();
+
+            empEmail.value = emp.email ?? "";
+            empPhone.value = emp.phone ?? "";
+            empCompanyId.value = emp.company_id;
+            empDepartmentId.value = emp.department_id ?? "";
+            empPositionId.value = emp.position_id ?? "";
+
+            // gem link til person og disc-profile, så vi ikke sætter dem til null
+            currentPersonId = emp.person_id;
+            currentDiscProfileId = emp.disc_profile_id;
+        }
+
+        async function loadProjects() {
+            const res = await fetch(`${apiBaseUrl}/api/Project`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                errorDiv.textContent = "Kunne ikke hente projekter.";
+                return;
+            }
+            const projects = await res.json();
+            projectSelect.innerHTML = "";
+            projects.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.id} - ${p.name}`;
+                projectSelect.appendChild(opt);
+            });
+            await loadTasksForProject(); // initial load
+        }
+
+        async function loadTasksForProject() {
+            const projectId = projectSelect.value;
+            taskSelect.innerHTML = '<option value="">(ingen)</option>';
+
+            const res = await fetch(`${apiBaseUrl}/api/Task`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                errorDiv.textContent = "Kunne ikke hente tasks.";
+                return;
+            }
+            const tasks = await res.json();
+            tasks
+                .filter(t => t.project_id === Number(projectId))
+                .forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = `${t.id} - ${t.name}`;
+                    taskSelect.appendChild(opt);
+                });
+        }
+
+        projectSelect.addEventListener('change', loadTasksForProject);
+
+        // gem employee (PUT /api/Employee/{id}) + sync til Neo4j
+        document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.textContent = "";
+            successDiv.textContent = "";
+
+            const body = {
+                id: Number(employeeId),
+                email: empEmail.value,
+                phone: empPhone.value,
+                company_id: Number(empCompanyId.value),
+                person_id: currentPersonId,   // behold linket til person
+                department_id: empDepartmentId.value ? Number(empDepartmentId.value) : null,
+                position_id: empPositionId.value ? Number(empPositionId.value) : null,
+                disc_profile_id: currentDiscProfileId // behold disc-profile
+            };
+
+            const res = await fetch(`${apiBaseUrl}/api/Employee/${employeeId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                errorDiv.textContent = "Kunne ikke opdatere employee. Status: " + res.status;
+                return;
+            }
+
+            // sync til Neo4j efter SQL-opdatering (forudsætter sync-endpoint)
+            const syncRes = await fetch(
+                `${apiBaseUrl}/api/Graph/employee/${employeeId}/sync-from-sql`,
+                {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+
+            if (!syncRes.ok) {
+                successDiv.textContent = "Employee opdateret i SQL, men sync til Neo4j fejlede (status " + syncRes.status + ").";
+                return;
+            }
+
+            successDiv.textContent = "Employee opdateret (SQL + Neo4j sync).";
+        });
+
+        // tilknyt employee til projekt (+ evt task)
+        document.getElementById('assignForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorDiv.textContent = "";
+            successDiv.textContent = "";
+
+            const projId = Number(projectSelect.value);
+            const taskId = taskSelect.value ? Number(taskSelect.value) : null;
+
+            // 1) employee -> project
+            const resProj = await fetch(
+                `${apiBaseUrl}/api/AdminAssignments/assign-employee-project?employeeId=${employeeId}&projectId=${projId}`,
+                {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+
+            if (!resProj.ok) {
+                errorDiv.textContent = "Kunne ikke tilknytte employee til projekt. Status: " + resProj.status;
+                return;
+            }
+
+            // 2) employee -> task (hvis valgt)
+            if (taskId) {
+                const resTask = await fetch(
+                    `${apiBaseUrl}/api/AdminAssignments/assign-employee-task?employeeId=${employeeId}&taskId=${taskId}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }
+                );
+                if (!resTask.ok) {
+                    errorDiv.textContent = "Projekt sat, men kunne ikke tilknytte task. Status: " + resTask.status;
+                    return;
+                }
+            }
+
+            successDiv.textContent = "Tilknytning gemt (SQL + graph sync).";
+        });
+
+        // init
+        (async function init() {
+            if (!employeeId) return;
+            await loadEmployee();
+            await loadProjects();
+        })();
+    </script>
+</body>
+</html>

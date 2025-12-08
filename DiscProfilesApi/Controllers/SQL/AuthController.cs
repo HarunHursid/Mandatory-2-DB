@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DiscProfilesApi.Controllers;
+namespace DiscProfilesApi.Controllers.SQL;
 
 [ApiController]
 [Route("api/[controller]")]

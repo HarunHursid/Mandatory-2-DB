@@ -95,6 +95,7 @@
                 <th>Rolle</th>
                 <th>Aktiv</th>
                 <th>Employee ID</th>
+                <th>Slet</th> <!-- NY KOLONNE -->
             </tr>
         </thead>
         <tbody id="usersBody"></tbody>
@@ -235,20 +236,70 @@
 
                 users.forEach(user => {
                     const tr = document.createElement('tr');
+
+                    // selve cellerne
                     tr.innerHTML = `
-                            <td>${user.id}</td>
-                            <td>${user.email}</td>
-                            <td>${user.role}</td>
-                            <td>${user.is_active ? 'Ja' : 'Nej'}</td>
-                            <td>${user.employee_id ?? ''}</td>
-                        `;
+                <td>${user.id}</td>
+                <td>${user.email}</td>
+                <td>${user.role}</td>
+                <td>${user.is_active ? 'Ja' : 'Nej'}</td>
+                <td>${user.employee_id ?? ''}</td>
+            `;
+
+                    // gør rækken klikbar hvis der er employee_id
+                    if (user.employee_id) {
+                        tr.style.cursor = 'pointer';
+                        tr.title = 'Klik for at redigere employee og projekter';
+
+                        tr.addEventListener('click', () => {
+                            window.location.href = `employee.html?employeeId=${user.employee_id}`;
+                        });
+                    }
+
+                    // slet-knap
+                    const deleteTd = document.createElement('td');
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.textContent = 'Slet';
+
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // så vi ikke går til employee.html
+
+                        const confirmed = confirm(`Er du sikker på, at du vil slette bruger #${user.id}?`);
+                        if (!confirmed) return;
+
+                        try {
+                            const res = await fetch(`${apiBaseUrl}/api/AppUser/${user.id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+
+                            if (!res.ok) {
+                                errorDiv.textContent = "Kunne ikke slette bruger. Status: " + res.status;
+                                return;
+                            }
+
+                            successDiv.textContent = `Bruger #${user.id} er markeret som slettet.`;
+                            await loadUsers(); // genindlæs listen
+                        } catch (err) {
+                            console.error(err);
+                            errorDiv.textContent = "Der opstod en fejl ved sletning.";
+                        }
+                    });
+
+                    deleteTd.appendChild(deleteBtn);
+                    tr.appendChild(deleteTd);
+
                     usersBody.appendChild(tr);
                 });
+
             } catch (err) {
                 console.error(err);
                 errorDiv.textContent = "Der opstod en fejl ved hentning af brugere.";
             }
         }
+
+
 
         // Håndtér oprettelse af ny bruger (AppUser + Employee + Person)
         document.getElementById('createUserForm').addEventListener('submit', async (e) => {

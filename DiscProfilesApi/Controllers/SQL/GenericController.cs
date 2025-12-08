@@ -1,7 +1,7 @@
 using DiscProfilesApi.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DiscProfilesApi.Controllers
+namespace DiscProfilesApi.Controllers.SQL
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -34,7 +34,7 @@ namespace DiscProfilesApi.Controllers
         public virtual async Task<ActionResult<TDto>> Create(TDto dto)
         {
             var created = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = ((dynamic)created).id }, created);
+            return CreatedAtAction(nameof(GetById), new { ((dynamic)created).id }, created);
         }
 
         [HttpPut("{id:int}")]

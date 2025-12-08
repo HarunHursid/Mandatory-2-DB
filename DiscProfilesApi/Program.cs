@@ -9,22 +9,32 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
-
+using Neo4j.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// Add services to the container.
-
+// -------- ENV VARS --------
 Env.Load();
 
+// SQL connection fra .env
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
+// NEO4J connection fra .env
+var neo4jUri = Environment.GetEnvironmentVariable("NEO4J_URI");
+var neo4jUser = Environment.GetEnvironmentVariable("NEO4J_USER");
+var neo4jPassword = Environment.GetEnvironmentVariable("NEO4J_PASSWORD");
+// database-navn bruger du i din GraphEmployeeService
+// NEO4J_DATABASE læses derinde via Environment.GetEnvironmentVariable("NEO4J_DATABASE")
+
+// -------- SERVICES --------
+
+// SQL DbContext
 builder.Services.AddDbContext<DiscProfilesContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -58,7 +68,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Add Authentication
+// Authentication
 var jwtConfig = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtConfig["Key"];
 
@@ -78,23 +88,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add Authorization
+// Authorization
 builder.Services.AddAuthorization();
 
-//Add AutoMapper
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Generic Dependency Injection
+// Generic DI
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<,>), typeof(GenericService<,>));
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IEmployee_PersonDomainInterface, Employee_PersonDomainService>();
 
+// -------- NEO4J DRIVER DI --------
+builder.Services.AddSingleton<IDriver>(_ =>
+    GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPassword))
+);
+
+// Graph service til Neo4j
+builder.Services.AddScoped<GraphEmployeeService>();
+
 var app = builder.Build();
 
-
-// Configure the HTTP request pipeline.
+// -------- PIPELINE --------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

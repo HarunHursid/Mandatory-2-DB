@@ -60,7 +60,7 @@ public class JwtTokenService : IJwtTokenService
             issuer: issuer,                                    // Hvem der udsteder tokenen
             audience: audience,                                // Hvem der må bruge tokenen
             claims: claims,                                    // Brugerinformationen indlejret i tokenen
-            expires: DateTime.UtcNow.AddDays(60),             // Tokenen udløber efter 60 dage
+            expires: DateTime.UtcNow.AddDays(450),             // Tokenen udløber efter 450 dage
             signingCredentials: credentials);                  // Signatur for at validere at tokenen er ægte
 
         // Konverterer JWT tokenen til en string-format og returnerer den
