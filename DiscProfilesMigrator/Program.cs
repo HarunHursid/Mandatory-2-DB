@@ -18,31 +18,36 @@ internal class Program
         // 1) Load .env
         Env.Load();
 
-        var sqlConnectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING");
-        var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
-        var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
+        // SQL: brug enten SQL_CONNECTION_STRING eller CONNECTION_STRING
+        var sqlConnectionString =
+            Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
+            ?? Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-       /* if (string.IsNullOrWhiteSpace(sqlConnectionString) ||
-            string.IsNullOrWhiteSpace(mongoConnectionString) ||
-            string.IsNullOrWhiteSpace(mongoDatabaseName))
-        {
-            Console.WriteLine("❌ Missing environment variables. Check .env.");
-            return;
-        }*/
+        // MONGO: prøv Atlas først, ellers lokal som fallback
+        var mongoConnectionString =
+            Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING_ATLAS")
+            ?? Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING_LOCAL")
+            ?? Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
 
+        // DB-navn: ny variabel MONGO_DB, fallback til gammel MONGO_DATABASE_NAME
+        var mongoDatabaseName =
+            Environment.GetEnvironmentVariable("MONGO_DB")
+            ?? Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
+
+        // simple checks
         if (string.IsNullOrWhiteSpace(sqlConnectionString))
         {
-            Console.WriteLine("check sql connection string");
+            Console.WriteLine("check sql connection string (SQL_CONNECTION_STRING / CONNECTION_STRING)");
             return;
         }
         if (string.IsNullOrWhiteSpace(mongoConnectionString))
         {
-            Console.WriteLine("check mongo connection string");
+            Console.WriteLine("check mongo connection string (MONGO_CONNECTION_STRING_ATLAS / LOCAL)");
             return;
         }
         if (string.IsNullOrWhiteSpace(mongoDatabaseName))
         {
-            Console.WriteLine("check mongo database name");
+            Console.WriteLine("check mongo database name (MONGO_DB / MONGO_DATABASE_NAME)");
             return;
         }
 
