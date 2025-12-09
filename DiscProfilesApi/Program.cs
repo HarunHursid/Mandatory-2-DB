@@ -23,8 +23,8 @@ Env.Load();
 // SQL connection fra .env
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
-var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
-var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
+var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING_ATLAS");
+var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME_ATLAS");
 
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
 builder.Services.AddSingleton(sp =>
