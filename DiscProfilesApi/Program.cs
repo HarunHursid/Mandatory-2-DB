@@ -134,11 +134,12 @@ builder.Services.AddScoped<GraphEmployeeService>();
 var app = builder.Build();
 
 // -------- PIPELINE --------
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "DiscProfiles API v1");
+    c.RoutePrefix = "swagger"; // så swagger ligger på /swagger
+});
 
 app.UseHttpsRedirection();
 
