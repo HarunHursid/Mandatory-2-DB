@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DiscProfilesApi.Models;
+﻿using DiscProfilesApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Neo4j.Driver;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace DiscProfilesApi.Services
 {
@@ -40,6 +41,30 @@ namespace DiscProfilesApi.Services
             }
 
             return result;
+        }
+
+
+
+        public async Task<Dictionary<string, object>?> GetNodeByLabelAndIdAsync(string label, int id)
+        {
+            if (!Regex.IsMatch(label, "^[A-Za-z_][A-Za-z0-9_]*$"))
+                throw new ArgumentException("Invalid label");
+
+            await using var session = _driver.AsyncSession();
+
+            var cursor = await session.RunAsync($@"
+MATCH (n:{label} {{id: $id}})
+RETURN properties(n) AS props
+LIMIT 1
+", new { id });
+
+            var hasRecord = await cursor.FetchAsync();
+            if (!hasRecord) return null;
+
+            var record = cursor.Current;
+
+            // props kan være Map/Dictionary alt efter driver - men As<Dictionary<string, object>>() plejer at virke
+            return record["props"].As<Dictionary<string, object>>();
         }
 
         // 2) REN GRAPH: kolleger i samme company
