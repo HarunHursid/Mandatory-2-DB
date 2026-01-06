@@ -32,13 +32,16 @@ namespace DiscProfilesApi.Controllers.Graph
         }
 
         // POST
-        [HttpPost("{id:int}/sync-from-sql")]
         [Authorize(Roles = "admin")]
+        [HttpPost("{id:int}/sync-from-sql")]
         public async Task<IActionResult> SyncDiscProfileFromSql(int id)
         {
-            var success = await _graphDiscProfileService.MirrorDiscProfileFromSqlAsync(id);
-            if (!success) return NotFound($"Disc profile {id} not found in SQL");
-            return Ok(new { message = "Disc profile synced successfully" });
+            var ok = await _graphDiscProfileService.MirrorDiscProfileFromSqlAsync(id);
+            if (!ok) return NotFound();
+
+            var created = await _graphDiscProfileService.MirrorEmployeeDiscProfileRelationsAsync(id);
+
+            return Ok(new { message = "Disc profile synced", relationsCreated = created });
         }
 
         // PUT
