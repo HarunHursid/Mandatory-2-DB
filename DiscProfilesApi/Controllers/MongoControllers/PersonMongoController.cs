@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.MongoDocuments;
@@ -6,26 +6,26 @@ using DiscProfilesApi.MongoDocuments;
 namespace DiscProfilesApi.Controllers.MongoControllers
 {
     [ApiController]
-    [Route("api/mongo/companies")]
-    public class CompaniesMongoController : ControllerBase
+    [Route("api/mongo/persons")]
+    public class PersonMongoController : ControllerBase
     {
-        private readonly IGenericMongoService<CompanyDocument, CompanyDTO> _service;
+        private readonly IGenericMongoService<PersonDocument, PersonDTO> _service;
 
-        public CompaniesMongoController(
-            IGenericMongoService<CompanyDocument, CompanyDTO> service)
+        public PersonMongoController(
+            IGenericMongoService<PersonDocument, PersonDTO> service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CompanyDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<PersonDTO>>> GetAll()
         {
             var result = await _service.GetAllAsync();
             return Ok(result);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<CompanyDTO>> GetById(int id)
+        public async Task<ActionResult<PersonDTO>> GetById(int id)
         {
             var dto = await _service.GetByIdAsync(id);
             if (dto == null) return NotFound();
@@ -33,14 +33,14 @@ namespace DiscProfilesApi.Controllers.MongoControllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CompanyDTO>> Create([FromBody] CompanyDTO dto)
+        public async Task<ActionResult<PersonDTO>> Create([FromBody] PersonDTO dto)
         {
             var created = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.id }, created);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CompanyDTO dto)
+        public async Task<IActionResult> Update(int id, [FromBody] PersonDTO dto)
         {
             var success = await _service.UpdateAsync(id, dto);
             if (!success) return NotFound();
@@ -55,4 +55,4 @@ namespace DiscProfilesApi.Controllers.MongoControllers
             return NoContent();
         }
     }
-}
+}   

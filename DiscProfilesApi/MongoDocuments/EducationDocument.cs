@@ -2,7 +2,7 @@
 
 namespace DiscProfilesApi.MongoDocuments
 {
-    public class CompanyDocument
+    public class EducationDocument
     {
         [BsonId]
         public int Id { get; set; }
@@ -10,10 +10,10 @@ namespace DiscProfilesApi.MongoDocuments
         [BsonElement("name")]
         public string Name { get; set; } = string.Empty;
 
-        [BsonElement("location")]
-        public string? Location { get; set; }
+        [BsonElement("type")]
+        public string? Type { get; set; }
 
-        [BsonElement("business_field")]
-        public string? BusinessField { get; set; }
+        [BsonElement("grade")]
+        public int? Grade { get; set; }
     }
 }

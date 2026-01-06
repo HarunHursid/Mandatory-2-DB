@@ -1,8 +1,16 @@
+<<<<<<< HEAD
+﻿using System.Threading.Tasks;
+using DiscProfilesApi.Services;
+using DiscProfilesApi.Services.GraphServices;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+=======
 ﻿using DiscProfilesApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Neo4j.Driver;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+>>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
 
 namespace DiscProfilesApi.Controllers
 {
@@ -17,7 +25,8 @@ namespace DiscProfilesApi.Controllers
             _graphEmployeeService = graphEmployeeService;
         }
 
-        // 1) Ren graph
+        // ========== GET (READ) ==========
+
         // GET: api/graph/employees-with-company
         [HttpGet("employees-with-company")]
         public async Task<IActionResult> GetEmployeesWithCompany()
@@ -26,7 +35,6 @@ namespace DiscProfilesApi.Controllers
             return Ok(data);
         }
 
-        // 2) Ren graph
         // GET: api/graph/employee/{id}/colleagues
         [HttpGet("employee/{id:int}/colleagues")]
         public async Task<IActionResult> GetColleagues(int id)
@@ -35,7 +43,6 @@ namespace DiscProfilesApi.Controllers
             return Ok(data);
         }
 
-        // REN GRAPH: projekter for en employee
         // GET: api/graph/employee/{id}/projects
         [HttpGet("employee/{id:int}/projects")]
         public async Task<IActionResult> GetEmployeeProjects(int id)
@@ -44,8 +51,7 @@ namespace DiscProfilesApi.Controllers
             return Ok(projects);
         }
 
-        // REN GRAPH: tasks for en employee (via projekter)
-        // GET: api/graph/employee/{id:int}/tasks
+        // GET: api/graph/employee/{id}/tasks
         [HttpGet("employee/{id:int}/tasks")]
         public async Task<IActionResult> GetEmployeeTasks(int id)
         {
@@ -53,8 +59,6 @@ namespace DiscProfilesApi.Controllers
             return Ok(tasks);
         }
 
-
-        // 3) SQL + graph
         // GET: api/graph/employee/{id}/overview
         [HttpGet("employee/{id:int}/overview")]
         public async Task<IActionResult> GetEmployeeOverview(int id)
@@ -64,23 +68,49 @@ namespace DiscProfilesApi.Controllers
             return Ok(overview);
         }
 
-        // 4) Write i graph
+        // ========== POST (CREATE) ==========
+
         // POST: api/graph/employees
         [HttpPost("employees")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeGraphDto dto)
         {
             await _graphEmployeeService.CreateEmployeeNodeAsync(dto.Id, dto.Email);
-            return NoContent();
+            return CreatedAtAction(nameof(GetEmployeeProjects), new { id = dto.Id });
         }
 
         // POST: api/graph/employee/{id}/sync-from-sql
         [HttpPost("employee/{id:int}/sync-from-sql")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncEmployeeFromSql(int id)
         {
             await _graphEmployeeService.MirrorEmployeeFromSqlAsync(id);
             return NoContent();
         }
 
+<<<<<<< HEAD
+        // ========== PUT (UPDATE) ==========
+
+        // PUT: api/graph/employee/{id}
+        [HttpPut("employee/{id:int}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateEmployee(int id, [FromBody] UpdateEmployeeGraphDto dto)
+        {
+            var success = await _graphEmployeeService.UpdateEmployeeNodeAsync(id, dto.Email, dto.Phone);
+            return success ? NoContent() : NotFound();
+        }
+
+        // ========== DELETE ==========
+
+        // DELETE: api/graph/employee/{id}
+        [HttpDelete("employee/{id:int}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteEmployee(int id)
+        {
+            var success = await _graphEmployeeService.DeleteEmployeeNodeAsync(id);
+            return success ? NoContent() : NotFound();
+        }
+=======
         [HttpGet("node/{label}/{id:int}")]
         public async Task<IActionResult> GetNodeByLabelAndId(string label, int id)
         {
@@ -94,12 +124,19 @@ namespace DiscProfilesApi.Controllers
             return Ok(props);
         }
 
+>>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
     }
 
-    // DTO-klasse
+    // DTO-klasser
     public class CreateEmployeeGraphDto
     {
         public int Id { get; set; }
         public string Email { get; set; } = string.Empty;
+    }
+
+    public class UpdateEmployeeGraphDto
+    {
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
     }
 }
