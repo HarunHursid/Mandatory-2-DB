@@ -8,11 +8,11 @@ namespace DiscProfilesApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class GraphEmployeeController : ControllerBase
+    public class GraphController : ControllerBase
     {
         private readonly GraphEmployeeService _graphEmployeeService;
 
-        public GraphEmployeeController(GraphEmployeeService graphEmployeeService)
+        public GraphController(GraphEmployeeService graphEmployeeService)
         {
             _graphEmployeeService = graphEmployeeService;
         }
