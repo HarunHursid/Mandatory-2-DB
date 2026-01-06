@@ -36,8 +36,9 @@ namespace DiscProfilesApi.Controllers.Graph
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncDiscProfileFromSql(int id)
         {
-            await _graphDiscProfileService.MirrorDiscProfileFromSqlAsync(id);
-            return NoContent();
+            var success = await _graphDiscProfileService.MirrorDiscProfileFromSqlAsync(id);
+            if (!success) return NotFound($"Disc profile {id} not found in SQL");
+            return Ok(new { message = "Disc profile synced successfully" });
         }
 
         // PUT

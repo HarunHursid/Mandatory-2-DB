@@ -66,13 +66,13 @@ namespace DiscProfilesApi.Services.GraphServices
             return result;
         }
 
-        public async Task MirrorDiscProfileFromSqlAsync(int discProfileId)
+        public async Task<bool> MirrorDiscProfileFromSqlAsync(int discProfileId)
         {
             var profile = await _sqlContext.disc_profiles
                 .FirstOrDefaultAsync(p => p.id == discProfileId);
 
             if (profile == null)
-                return;
+                return false;
 
             await using var session = _driver.AsyncSession();
 
@@ -84,13 +84,47 @@ SET
     dp.description = $description;
 ";
 
-            await session.RunAsync(profileCypher, new
+            var result = await session.RunAsync(profileCypher, new
             {
                 id = profile.id,
                 name = profile.name,
                 color = profile.color,
                 description = profile.description
             });
+
+            var summary = await result.ConsumeAsync();
+            return summary.Counters.NodesCreated > 0 || summary.Counters.PropertiesSet > 0;
+        }
+
+        // Mirror employee-disc profile relations via employee.disc_profile_id
+        public async Task<int> MirrorEmployeeDiscProfileRelationsAsync(int discProfileId)
+        {
+            // Hent employees fra SQL som har denne disc profile (via employee.disc_profile_id)
+            var employeeIds = await _sqlContext.employees
+                .Where(e => e.disc_profile_id == discProfileId)
+                .Select(e => e.id)
+                .ToListAsync();
+
+            if (!employeeIds.Any())
+                return 0;
+
+            await using var session = _driver.AsyncSession();
+
+            var cypher = @"
+UNWIND $employeeIds AS empId
+MERGE (e:Employee {id: empId})
+MERGE (dp:DiscProfile {id: $discProfileId})
+MERGE (e)-[:HAS_PROFILE]->(dp);
+";
+
+            var result = await session.RunAsync(cypher, new
+            {
+                employeeIds,
+                discProfileId
+            });
+
+            var summary = await result.ConsumeAsync();
+            return summary.Counters.RelationshipsCreated;
         }
 
         // Updates the DiscProfile node with the given id
