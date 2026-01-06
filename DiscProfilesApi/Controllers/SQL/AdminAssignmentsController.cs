@@ -1,5 +1,5 @@
 ﻿using DiscProfilesApi.Models;
-using DiscProfilesApi.Services;
+using DiscProfilesApi.Services.GraphServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

@@ -14,6 +14,7 @@ using MongoDB.Driver;
 using System.Text;
 
 using Neo4j.Driver;
+using DiscProfilesApi.Services.GraphServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,10 +37,66 @@ builder.Services.AddSingleton(sp =>
 // Generic repo for alle dokumenttyper
 builder.Services.AddScoped(typeof(IGenericMongoRepository<>), typeof(GenericMongoRepository<>));
 
-// Kun service-registrering  mapperen kommer fra AutoMapper
 builder.Services.AddScoped<
     IGenericMongoService<CompanyDocument, CompanyDTO>,
     GenericMongoService<CompanyDocument, CompanyDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<AppUserDocument, AppUserDTO>,
+    GenericMongoService<AppUserDocument, AppUserDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<DiscProfileDocument, DiscProfileDTO>,
+    GenericMongoService<DiscProfileDocument, DiscProfileDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<EmployeeDocument, EmployeeDTO>,
+    GenericMongoService<EmployeeDocument, EmployeeDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<ProjectDocument, ProjectDTO>,
+    GenericMongoService<ProjectDocument, ProjectDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<DepartmentDocument, DepartmentDTO>,
+    GenericMongoService<DepartmentDocument, DepartmentDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<EducationDocument, EducationDTO>,
+    GenericMongoService<EducationDocument, EducationDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<PersonDocument, PersonDTO>,
+    GenericMongoService<PersonDocument, PersonDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<PositionDocument, PositionDTO>,
+    GenericMongoService<PositionDocument, PositionDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<TaskDocument, TaskDTO>,
+    GenericMongoService<TaskDocument, TaskDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<SocialEventDocument, SocialEventDTO>,
+    GenericMongoService<SocialEventDocument, SocialEventDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<DailyTaskLogDocument, DailyTaskLogDTO>,
+    GenericMongoService<DailyTaskLogDocument, DailyTaskLogDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<TaskEvaluationDocument, TaskEvaluationDTO>,
+    GenericMongoService<TaskEvaluationDocument, TaskEvaluationDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<StressMeasureDocument, StressMeasureDTO>,
+    GenericMongoService<StressMeasureDocument, StressMeasureDTO>>();
+
+builder.Services.AddScoped<
+    IGenericMongoService<ProjectsDiscProfilesDocument, ProjectsDiscProfileDTO>,
+    GenericMongoService<ProjectsDiscProfilesDocument, ProjectsDiscProfileDTO>>();
+
 
 // NEO4J connection fra .env
 var neo4jUri = Environment.GetEnvironmentVariable("NEO4J_URI");
@@ -130,6 +187,19 @@ builder.Services.AddSingleton<IDriver>(_ =>
 
 // Graph service til Neo4j
 builder.Services.AddScoped<GraphEmployeeService>();
+builder.Services.AddScoped<GraphCompanyService>();
+builder.Services.AddScoped<GraphProjectService>();
+builder.Services.AddScoped<GraphDiscProfileService>();
+builder.Services.AddScoped<GraphDepartmentService>();
+builder.Services.AddScoped<GraphTaskService>();
+builder.Services.AddScoped<GraphPersonService>();
+builder.Services.AddScoped<GraphEducationService>();
+builder.Services.AddScoped<GraphPositionService>();
+builder.Services.AddScoped<GraphSocialEventService>();
+builder.Services.AddScoped<GraphStressMeasureService>();
+builder.Services.AddScoped<GraphDailyTaskLogService>();
+builder.Services.AddScoped<GraphTaskEvaluationService>();
+builder.Services.AddScoped<GraphProjectsDiscProfilesService>();
 
 var app = builder.Build();
 

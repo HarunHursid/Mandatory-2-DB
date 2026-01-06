@@ -5,7 +5,7 @@ using DiscProfilesApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Neo4j.Driver;
 
-namespace DiscProfilesApi.Services
+namespace DiscProfilesApi.Services.GraphServices
 {
     public class GraphEmployeeService
     {
@@ -208,10 +208,10 @@ SET
                     id = e.person_id.Value,
                     privateEmail = e.person.private_email,
                     privatePhone = e.person.private_phone,
-                    cpr = e.person.cpr,
+                    e.person.cpr,
                     firstName = e.person.first_name,
                     lastName = e.person.last_name,
-                    experience = e.person.experience,
+                    e.person.experience,
                     educationId = e.person.EducationID
                 });
             }
@@ -239,9 +239,9 @@ FOREACH (_ IN CASE WHEN p IS NULL THEN [] ELSE [1] END |
 
             await session.RunAsync(employeeCypher, new
             {
-                id = e.id,
-                email = e.email,
-                phone = e.phone,
+                e.id,
+                e.email,
+                e.phone,
                 companyId = e.company_id,
                 departmentId = e.department_id,
                 personId = e.person_id
@@ -267,10 +267,10 @@ MERGE (emp)-[:WORKS_ON]->(p);
                 await session.RunAsync(projectCypher, new
                 {
                     projectId = proj.id,
-                    name = proj.name,
-                    description = proj.description,
-                    deadline = proj.deadline,
-                    completed = proj.completed,
+                    proj.name,
+                    proj.description,
+                    proj.deadline,
+                    proj.completed,
                     numberOfEmployees = proj.number_of_employees,
                     employeeId = e.id
                 });
@@ -295,14 +295,62 @@ MERGE (emp)-[:ASSIGNED_TO_TASK]->(t);
                     await session.RunAsync(taskCypher, new
                     {
                         taskId = t.id,
-                        name = t.name,
-                        completed = t.completed,
+                        t.name,
+                        t.completed,
                         timeOfCompletion = t.time_of_completion,
                         projectId = proj.id,
                         employeeId = e.id
                     });
                 }
             }
+        }
+
+        // UPDATE: opdater employee node
+        public async Task<bool> UpdateEmployeeNodeAsync(int id, string? email, string? phone)
+        {
+            await using var session = _driver.AsyncSession();
+
+            var setClauses = new List<string>();
+            var parameters = new Dictionary<string, object?> { { "id", id } };
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                setClauses.Add("e.email = $email");
+                parameters["email"] = email;
+            }
+
+            if (!string.IsNullOrEmpty(phone))
+            {
+                setClauses.Add("e.phone = $phone");
+                parameters["phone"] = phone;
+            }
+
+            if (setClauses.Count == 0)
+                return false;
+
+            var setClause = string.Join(", ", setClauses);
+
+            var result = await session.RunAsync($@"
+                MATCH (e:Employee {{id: $id}})
+                SET {setClause}
+            ", parameters);
+
+            var summary = await result.ConsumeAsync();
+            return summary.Counters.PropertiesSet > 0;
+        }
+
+        // DELETE: slet employee node og alle relationer
+        public async Task<bool> DeleteEmployeeNodeAsync(int id)
+        {
+            await using var session = _driver.AsyncSession();
+
+            var result = await session.RunAsync(@"
+        MATCH (e:Employee {id: $id})
+        DETACH DELETE e
+    ", new { id });
+
+            var summary = await result.ConsumeAsync();
+            return summary.Counters.NodesDeleted > 0;
         }
     }
 

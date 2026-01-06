@@ -2,6 +2,7 @@ using DiscProfilesApi.DTOs;
 using DiscProfilesApi.Interfaces;
 using DiscProfilesApi.Models;
 using DiscProfilesApi.Services;
+using DiscProfilesApi.Services.GraphServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

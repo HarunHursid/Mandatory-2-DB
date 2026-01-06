@@ -2,18 +2,12 @@
 
 namespace DiscProfilesApi.MongoDocuments
 {
-    public class CompanyDocument
+    public class PositionDocument
     {
         [BsonId]
         public int Id { get; set; }
 
         [BsonElement("name")]
         public string Name { get; set; } = string.Empty;
-
-        [BsonElement("location")]
-        public string? Location { get; set; }
-
-        [BsonElement("business_field")]
-        public string? BusinessField { get; set; }
     }
 }
