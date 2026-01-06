@@ -75,12 +75,67 @@
             margin-top: 10px;
             padding: 8px 12px;
         }
+
+        /* --- Search UI (from Copilot) --- */
+        .search-panel {
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .details {
+            margin-top: 8px;
+        }
+
+            .details table {
+                margin-top: 8px;
+            }
+
+        .muted {
+            color: #666;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="top-bar">
         <h1>Admin – brugere</h1>
         <button id="logoutBtn">Log ud</button>
+    </div>
+
+    <!-- SEARCH (under heading) -->
+    <div class="search-panel">
+        <h2 style="margin:0 0 6px 0;">Search</h2>
+        <div class="muted">Type min. 2 tegn. Klik et forslag for at vise hele objektet.</div>
+
+        <div class="search-grid">
+            <div>
+                <label>SQL search</label>
+                <input id="sqlSearch" list="sqlSuggestions" placeholder="Søg i SQL..." />
+                <datalist id="sqlSuggestions"></datalist>
+                <div id="sqlDetails" class="details"></div>
+            </div>
+
+            <div>
+                <label>Mongo search (companies)</label>
+                <input id="mongoSearch" list="mongoSuggestions" placeholder="Søg i Mongo (companies)..." />
+                <datalist id="mongoSuggestions"></datalist>
+                <div id="mongoDetails" class="details"></div>
+            </div>
+
+            <div>
+                <label>Neo4j search</label>
+                <input id="neoSearch" list="neoSuggestions" placeholder="Søg i Neo4j..." />
+                <datalist id="neoSuggestions"></datalist>
+                <div id="neoDetails" class="details"></div>
+            </div>
+        </div>
     </div>
 
     <div class="error" id="error"></div>
@@ -95,7 +150,7 @@
                 <th>Rolle</th>
                 <th>Aktiv</th>
                 <th>Employee ID</th>
-                <th>Slet</th> <!-- NY KOLONNE -->
+                <th>Slet</th>
             </tr>
         </thead>
         <tbody id="usersBody"></tbody>
@@ -206,7 +261,6 @@
             window.location.href = 'login.html';
         }
 
-
         // Hvis ikke admin → væk herfra
         if (role !== 'admin') {
             errorDiv.textContent = "Du skal være admin for at se denne side.";
@@ -214,16 +268,204 @@
             loadUsers();
         }
 
-        // Hent eksisterende brugere
+        // ---- SEARCH helpers (from Copilot) ----
+        function debounce(fn, ms) {
+            let t;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), ms);
+            };
+        }
+        function renderObjectAsTable(obj) {
+            if (!obj || typeof obj !== "object") return "<div>(no data)</div>";
+
+            // Hvis backend returnerer en liste, så tag første element
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) return "<div>(empty)</div>";
+                obj = obj[0];
+            }
+
+            let keys = Object.keys(obj);
+            if (keys.length === 0) return "<div>(empty)</div>";
+
+            // Find ID-key (id, Id, ID)
+            const idKey = keys.find(k => k.toLowerCase() === "id");
+
+            // Fjern idKey fra keys og læg den først
+            keys = keys.filter(k => k !== idKey);
+            const orderedKeys = idKey ? [idKey, ...keys] : keys;
+
+            const header = orderedKeys.map(k => `<th>${k}</th>`).join("");
+            const row = orderedKeys.map(k => `<td>${obj[k] ?? ""}</td>`).join("");
+
+            return `
+    <table>
+      <thead><tr>${header}</tr></thead>
+      <tbody><tr>${row}</tr></tbody>
+    </table>
+  `;
+        }
+
+        async function fetchJson(url) {
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        }
+
+        async function fetchSuggestions(endpoint, q) {
+            const url = `${apiBaseUrl}${endpoint}?q=${encodeURIComponent(q)}&limit=10`;
+            return await fetchJson(url);
+        }
+
+        const suggestionCache = { sql: [], mongo: [], neo: [] };
+
+        function fillDatalist(datalistEl, items) {
+            datalistEl.innerHTML = "";
+            items.forEach(x => {
+                const opt = document.createElement("option");
+                opt.value = `${x.type}#${x.id} - ${x.label}`;
+                datalistEl.appendChild(opt);
+            });
+        }
+
+        function parseSelected(value) {
+            const m = /^([^#]+)#(\d+)\s*-/.exec((value || "").trim());
+            if (!m) return null;
+            return { type: m[1], id: Number(m[2]) };
+        }
+
+        async function showSqlDetails(selection) {
+            const detailsEl = document.getElementById("sqlDetails");
+            detailsEl.innerHTML = "";
+
+            const map = {
+                company: "Company",
+                department: "Department",
+                disc_profile: "DiscProfile",
+                education: "Education",
+                employee: "Employee",
+                person: "Person",
+                position: "Position",
+                project: "Project",
+                task: "Task",
+                social_event: "SocialEvent",
+                stress_measure: "StressMeasure",
+                task_evaluation: "TaskEvaluation",
+                daily_task_log: "DailyTaskLog",
+                projects_disc_profile: "ProjectsDiscProfile",
+                app_user: "AppUser"
+            };
+
+            const controller = map[selection.type];
+            if (!controller) {
+                detailsEl.innerHTML = `<div>Unknown type: ${selection.type}</div>`;
+                return;
+            }
+
+            try {
+                const obj = await fetchJson(`${apiBaseUrl}/api/${controller}/${selection.id}`);
+                detailsEl.innerHTML = renderObjectAsTable(obj);
+            } catch (e) {
+                detailsEl.innerHTML = `<div>Could not load SQL details (${e.message})</div>`;
+            }
+        }
+
+        async function showMongoDetails(selection) {
+            const detailsEl = document.getElementById("mongoDetails");
+            detailsEl.innerHTML = "";
+
+            if (selection.type !== "company") {
+                detailsEl.innerHTML = `<div>Mongo supports only company for now.</div>`;
+                return;
+            }
+
+            try {
+                const obj = await fetchJson(`${apiBaseUrl}/api/mongo/companies/${selection.id}`);
+                detailsEl.innerHTML = renderObjectAsTable(obj);
+            } catch (e) {
+                detailsEl.innerHTML = `<div>Could not load Mongo details (${e.message})</div>`;
+            }
+        }
+
+        async function showNeoDetails(selection) {
+            const detailsEl = document.getElementById("neoDetails");
+            detailsEl.innerHTML = "";
+
+            try {
+                // NOTE: selection.type must match Neo4j label
+                const obj = await fetchJson(`${apiBaseUrl}/api/Graph/node/${selection.type}/${selection.id}`);
+                detailsEl.innerHTML = renderObjectAsTable(obj);
+            } catch (e) {
+                detailsEl.innerHTML = `<div>Could not load Neo details (${e.message})</div>`;
+            }
+        }
+
+        const onSqlInput = debounce(async () => {
+            const q = document.getElementById("sqlSearch").value.trim();
+            if (q.length < 2) {
+                suggestionCache.sql = [];
+                fillDatalist(document.getElementById("sqlSuggestions"), []);
+                return;
+            }
+            const items = await fetchSuggestions("/api/search/sql", q);
+            suggestionCache.sql = items;
+            fillDatalist(document.getElementById("sqlSuggestions"), items);
+        }, 250);
+
+        const onMongoInput = debounce(async () => {
+            const q = document.getElementById("mongoSearch").value.trim();
+            if (q.length < 2) {
+                suggestionCache.mongo = [];
+                fillDatalist(document.getElementById("mongoSuggestions"), []);
+                return;
+            }
+            const items = await fetchSuggestions("/api/search/mongo", q);
+            suggestionCache.mongo = items;
+            fillDatalist(document.getElementById("mongoSuggestions"), items);
+        }, 250);
+
+        const onNeoInput = debounce(async () => {
+            const q = document.getElementById("neoSearch").value.trim();
+            if (q.length < 2) {
+                suggestionCache.neo = [];
+                fillDatalist(document.getElementById("neoSuggestions"), []);
+                return;
+            }
+            const items = await fetchSuggestions("/api/search/neo", q);
+            suggestionCache.neo = items;
+            fillDatalist(document.getElementById("neoSuggestions"), items);
+        }, 250);
+
+        document.getElementById("sqlSearch").addEventListener("input", onSqlInput);
+        document.getElementById("mongoSearch").addEventListener("input", onMongoInput);
+        document.getElementById("neoSearch").addEventListener("input", onNeoInput);
+
+        document.getElementById("sqlSearch").addEventListener("change", async (e) => {
+            const selection = parseSelected(e.target.value);
+            if (!selection) return;
+            await showSqlDetails(selection);
+        });
+
+        document.getElementById("mongoSearch").addEventListener("change", async (e) => {
+            const selection = parseSelected(e.target.value);
+            if (!selection) return;
+            await showMongoDetails(selection);
+        });
+
+        document.getElementById("neoSearch").addEventListener("change", async (e) => {
+            const selection = parseSelected(e.target.value);
+            if (!selection) return;
+            await showNeoDetails(selection);
+        });
+
+        // ---- EXISTING USERS LIST ----
         async function loadUsers() {
             errorDiv.textContent = "";
             successDiv.textContent = "";
 
             try {
                 const response = await fetch(`${apiBaseUrl}/api/AppUser`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (!response.ok) {
@@ -238,33 +480,29 @@
                 users.forEach(user => {
                     const tr = document.createElement('tr');
 
-                    // selve cellerne
                     tr.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.email}</td>
-                    <td>${user.role}</td>
-                    <td>${user.is_active ? 'Ja' : 'Nej'}</td>
-                    <td>${user.employee_id ?? ''}</td>
-                `;
+                            <td>${user.id}</td>
+                            <td>${user.email}</td>
+                            <td>${user.role}</td>
+                            <td>${user.is_active ? 'Ja' : 'Nej'}</td>
+                            <td>${user.employee_id ?? ''}</td>
+                        `;
 
-                    // gør rækken klikbar hvis der er employee_id
                     if (user.employee_id) {
                         tr.style.cursor = 'pointer';
                         tr.title = 'Klik for at redigere employee og projekter';
-
                         tr.addEventListener('click', () => {
                             window.location.href = `employee.html?employeeId=${user.employee_id}`;
                         });
                     }
 
-                    // slet-knap
                     const deleteTd = document.createElement('td');
                     const deleteBtn = document.createElement('button');
                     deleteBtn.type = 'button';
                     deleteBtn.textContent = 'Slet';
 
                     deleteBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation(); // så vi ikke går til employee.html
+                        e.stopPropagation();
 
                         const confirmed = confirm(`Er du sikker på, at du vil slette bruger #${user.id}?`);
                         if (!confirmed) return;
@@ -281,7 +519,7 @@
                             }
 
                             successDiv.textContent = `Bruger #${user.id} er markeret som slettet.`;
-                            await loadUsers(); // genindlæs listen
+                            await loadUsers();
                         } catch (err) {
                             console.error(err);
                             errorDiv.textContent = "Der opstod en fejl ved sletning.";
@@ -290,7 +528,6 @@
 
                     deleteTd.appendChild(deleteBtn);
                     tr.appendChild(deleteTd);
-
                     usersBody.appendChild(tr);
                 });
 
@@ -299,8 +536,6 @@
                 errorDiv.textContent = "Der opstod en fejl ved hentning af brugere.";
             }
         }
-
-
 
         // Håndtér oprettelse af ny bruger (AppUser + Employee + Person)
         document.getElementById('createUserForm').addEventListener('submit', async (e) => {

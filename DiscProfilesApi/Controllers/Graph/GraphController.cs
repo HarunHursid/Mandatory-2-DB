@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 ﻿using System.Threading.Tasks;
 using DiscProfilesApi.Services;
 using DiscProfilesApi.Services.GraphServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+=======
+﻿using DiscProfilesApi.Services;
+using Microsoft.AspNetCore.Mvc;
+using Neo4j.Driver;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+>>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
 
 namespace DiscProfilesApi.Controllers
 {
@@ -80,6 +88,7 @@ namespace DiscProfilesApi.Controllers
             return NoContent();
         }
 
+<<<<<<< HEAD
         // ========== PUT (UPDATE) ==========
 
         // PUT: api/graph/employee/{id}
@@ -101,6 +110,21 @@ namespace DiscProfilesApi.Controllers
             var success = await _graphEmployeeService.DeleteEmployeeNodeAsync(id);
             return success ? NoContent() : NotFound();
         }
+=======
+        [HttpGet("node/{label}/{id:int}")]
+        public async Task<IActionResult> GetNodeByLabelAndId(string label, int id)
+        {
+            // valider label her (eller i service) - jeg gør det her for at returnere BadRequest pænt
+            if (!Regex.IsMatch(label, "^[A-Za-z_][A-Za-z0-9_]*$"))
+                return BadRequest("Invalid label");
+
+            var props = await _graphEmployeeService.GetNodeByLabelAndIdAsync(label, id);
+            if (props is null) return NotFound();
+
+            return Ok(props);
+        }
+
+>>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
     }
 
     // DTO-klasser
