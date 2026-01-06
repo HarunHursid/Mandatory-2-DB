@@ -1,16 +1,11 @@
-<<<<<<< HEAD
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using DiscProfilesApi.Services;
 using DiscProfilesApi.Services.GraphServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-=======
-﻿using DiscProfilesApi.Services;
-using Microsoft.AspNetCore.Mvc;
 using Neo4j.Driver;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
->>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
 
 namespace DiscProfilesApi.Controllers
 {
@@ -88,7 +83,6 @@ namespace DiscProfilesApi.Controllers
             return NoContent();
         }
 
-<<<<<<< HEAD
         // ========== PUT (UPDATE) ==========
 
         // PUT: api/graph/employee/{id}
@@ -110,7 +104,7 @@ namespace DiscProfilesApi.Controllers
             var success = await _graphEmployeeService.DeleteEmployeeNodeAsync(id);
             return success ? NoContent() : NotFound();
         }
-=======
+
         [HttpGet("node/{label}/{id:int}")]
         public async Task<IActionResult> GetNodeByLabelAndId(string label, int id)
         {
@@ -124,7 +118,6 @@ namespace DiscProfilesApi.Controllers
             return Ok(props);
         }
 
->>>>>>> addf99358a1c048c95b095551ddd0c4fcbf9d760
     }
 
     // DTO-klasser
