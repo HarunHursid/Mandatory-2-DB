@@ -30,8 +30,8 @@ namespace DiscProfilesApi.Controllers.Graph
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncPositionFromSql(int id)
         {
-            await _graphPositionService.MirrorPositionFromSqlAsync(id);
-            return NoContent();
+            var created = await _graphPositionService.MirrorPositionFromSqlAsync(id);
+            return Ok(new { message = "Position synced", relationsCreated = created });
         }
 
         // PUT: api/graph/position/{id}

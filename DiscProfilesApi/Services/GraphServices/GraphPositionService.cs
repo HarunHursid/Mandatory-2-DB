@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DiscProfilesApi.Models;
@@ -44,16 +44,17 @@ namespace DiscProfilesApi.Services.GraphServices
         }
 
         // SYNC: spejl position fra SQL til Neo4j
-        public async Task MirrorPositionFromSqlAsync(int positionId)
+        public async Task<int> MirrorPositionFromSqlAsync(int positionId)
         {
             var position = await _sqlContext.positions
                 .FirstOrDefaultAsync(p => p.id == positionId);
 
             if (position == null)
-                return;
+                return 0;
 
             await using var session = _driver.AsyncSession();
 
+            // 1️⃣ Sync selve Position noden
             const string positionCypher = @"
 MERGE (po:Position {id: $id})
 SET po.name = $name;
@@ -64,6 +65,31 @@ SET po.name = $name;
                 id = position.id,
                 name = position.name
             });
+
+            // 2️⃣ Find employees i SQL med denne position
+            var employeeIds = await _sqlContext.employees
+                .Where(e => e.position_id == positionId)   // <- evt. PositionID
+                .Select(e => e.id)
+                .ToListAsync();
+
+            if (!employeeIds.Any())
+                return 0;
+
+            // 3️⃣ Sync relationerne i Neo4j
+            var relationCypher = @"
+UNWIND $employeeIds AS empId
+MERGE (e:Employee {id: empId})
+MERGE (po:Position {id: $positionId})
+WITH e, po
+OPTIONAL MATCH (e)-[r:HAS_POSITION]->(:Position)
+DELETE r
+MERGE (e)-[:HAS_POSITION]->(po);
+";
+
+            var result = await session.RunAsync(relationCypher, new { employeeIds, positionId });
+            var summary = await result.ConsumeAsync();
+
+            return summary.Counters.RelationshipsCreated;
         }
 
         // Updates the Position node with the given id

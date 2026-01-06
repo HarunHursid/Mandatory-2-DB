@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DiscProfilesApi.Models;
@@ -45,13 +45,13 @@ namespace DiscProfilesApi.Services.GraphServices
         }
 
         // SYNC: spejl education fra SQL til Neo4j
-        public async Task MirrorEducationFromSqlAsync(int educationId)
+        public async Task<int> MirrorEducationFromSqlAsync(int educationId)
         {
             var education = await _sqlContext.educations
                 .FirstOrDefaultAsync(e => e.id == educationId);
 
             if (education == null)
-                return;
+                return 0;
 
             await using var session = _driver.AsyncSession();
 
@@ -70,6 +70,34 @@ SET
                 type = education.type,
                 grade = education.grade
             });
+
+            // ✅ Sync relations after node exists
+            var created = await MirrorPersonEducationRelationsAsync(educationId);
+            return created;
+        }
+
+        public async Task<int> MirrorPersonEducationRelationsAsync(int educationId)
+        {
+            var personIds = await _sqlContext.persons
+                .Where(p => p.EducationID == educationId)
+                .Select(p => p.id)
+                .ToListAsync();
+
+            if (!personIds.Any())
+                return 0;
+
+            await using var session = _driver.AsyncSession();
+
+            var cypher = @"
+UNWIND $personIds AS pid
+MERGE (p:Person {id: pid})
+MERGE (ed:Education {id: $educationId})
+MERGE (p)-[:HAS_EDUCATION]->(ed);
+";
+
+            var result = await session.RunAsync(cypher, new { personIds, educationId });
+            var summary = await result.ConsumeAsync();
+            return summary.Counters.RelationshipsCreated;
         }
 
         // Updates the Education node with the given id

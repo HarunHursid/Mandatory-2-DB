@@ -24,13 +24,12 @@ namespace DiscProfilesApi.Controllers.Graph
             return Ok(data);
         }
 
-        // POST
         [HttpPost("{id:int}/sync-from-sql")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncEducationFromSql(int id)
         {
-            await _graphEducationService.MirrorEducationFromSqlAsync(id);
-            return NoContent();
+            var relationsCreated = await _graphEducationService.MirrorEducationFromSqlAsync(id);
+            return Ok(new { message = "Education synced", relationsCreated });
         }
 
         // PUT
