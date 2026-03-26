@@ -211,6 +211,22 @@ This system helps organisations match employees to projects and social events ba
 
 ---
 
+## 🤖 AI
+
+<a href="./docs/AI-Report.pdf">
+  <img src="https://img.shields.io/badge/📄_AI_Report-View_PDF-FF0000?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="View AI Report PDF"/>
+</a>
+
+---
+
+## 🗄️ DB-DiscRapport
+
+<a href="./docs/DB-DiscRapport.pdf">
+  <img src="https://img.shields.io/badge/📄_DB--DiscRapport-View_PDF-0078D4?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="View DB-DiscRapport PDF"/>
+</a>
+
+---
+
 ## 👤 Author
 
 **Harun Hursid** — [@HarunHursid](https://github.com/HarunHursid)
