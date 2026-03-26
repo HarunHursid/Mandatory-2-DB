@@ -1,5 +1,17 @@
 # 🧠 DISC Profiles API
 
+<img src="https://img.shields.io/badge/C%23-239120?style=flat&logo=csharp&logoColor=white">
+<img src="https://img.shields.io/badge/ASP.NET_Core_8-512BD4?style=flat&logo=dotnet&logoColor=white">
+<img src="https://img.shields.io/badge/SQL_Server-CC2927?style=flat&logo=microsoftsqlserver&logoColor=white">
+<img src="https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white">
+<img src="https://img.shields.io/badge/Neo4j-008CC1?style=flat&logo=neo4j&logoColor=white">
+<img src="https://img.shields.io/badge/Entity_Framework_Core-512BD4?style=flat&logo=dotnet&logoColor=white">
+<img src="https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white">
+<img src="https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black">
+<img src="https://img.shields.io/badge/AutoMapper-BE1B55?style=flat&logo=automapper&logoColor=white">
+
+<br>
+
 A full-stack **multi-database ASP.NET Core Web API** for managing DISC personality profiles across an organization — built as a mandatory database exam project. The system stores and mirrors data across three different database engines simultaneously: **SQL Server**, **MongoDB**, and **Neo4j**.
 
 ---
